@@ -24,10 +24,10 @@ Define `MPROF_IMPLEMENTATION` before including header in exactly one source file
 
 // . . .
 ```
-Set how mprof should handle th eprofiling result on program exit, by using `mprof::set_result_handler`. This function is passed a const reference to a `result_t` struct, containing
+Set how mprof should handle the profiling result on program exit, by using `mprof::set_result_handler`. This function is passed a const reference to a `result_t` struct, containing
 - `total_cycles`: the total number of CPU cycles recorded by mprof during execution.
 - `profiled_cycles`: the total number of CPU cycles spent in functions marked with `MPROF_PROFILE_HERE`.
-- `accumulators`: a `std::vector` of const pointers to `accumulator_t` structs, each associated with a profiled function. Each acc->mulator contains
+- `accumulators`: a `std::vector` of const pointers to `accumulator_t` structs, each associated with a profiled function. Each accumulator contains
     - `fnname`: the name of the function as a C-string.
     - `cycles`: number of CPU cycles spent inside function.
     - `calls`: number of times function was called

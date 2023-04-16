@@ -63,7 +63,7 @@ int main(it argc, char *argv[]) {
 ```
 ### Result:
 
-```consolel
+```console
 Function void do_number_stuff(int, double):
     Calls:                5
     Cycles:               30570

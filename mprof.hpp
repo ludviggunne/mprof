@@ -54,9 +54,9 @@ namespace mprof {
 
     struct result_t {
 
-        uint64_t                     total_cycles;
-        uint64_t                     profiled_cycles;
-        std::vector<accumulator_t *> accumulators;
+        uint64_t                           total_cycles;
+        uint64_t                           profiled_cycles;
+        std::vector<const accumulator_t *> accumulators;
     };
 
     void set_result_handler(std::function<void(const result_t &)> handler);

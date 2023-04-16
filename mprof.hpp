@@ -92,7 +92,7 @@ namespace mprof {
         std::function<void(const result_t &)> result_handler;
     };
 
-    collector_t collector;
+    extern collector_t collector;
     
     class scope_t {
 
@@ -137,6 +137,8 @@ namespace mprof {
     void set_result_handler(std::function<void(const result_t &)> handler) {
         collector.result_handler = handler;
     }
+
+    collector_t collector;
 }
 
 #endif /* MPROF_IMPLEMENTATION */

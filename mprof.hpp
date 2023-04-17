@@ -125,7 +125,7 @@ namespace mprof {
         record_t &new_record(const char *fnname) {
 
             result_wrapper.result.records.emplace_back(fnname);
-            return result_wrapper.result.records[result_wrapper.result.records.size()]
+            return result_wrapper.result.records[result_wrapper.result.records.size() - 1];
         }
     }
 }

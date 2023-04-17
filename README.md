@@ -25,9 +25,8 @@ Define `MPROF_IMPLEMENTATION` before including header in exactly one source file
 // . . .
 ```
 Set how mprof should handle the profiling result on program exit, by using `mprof::set_result_handler`. This function is passed a const reference to a `result_t` struct, containing
-- `total_cycles`: the total number of CPU cycles recorded by mprof during execution.
-- `profiled_cycles`: the total number of CPU cycles spent in functions marked with `MPROF_PROFILE_HERE`.
-- `accumulators`: a `std::vector` of const pointers to `accumulator_t` structs, each associated with a profiled function. Each accumulator contains
+- `cycles`: the total number of CPU cycles recorded by mprof during execution.
+- `records`: a `std::vector` of `record_t` structs, each associated with a profiled function. Each `record_t` contains
     - `fnname`: the name of the function as a C-string.
     - `cycles`: number of CPU cycles spent inside function.
     - `calls`: number of times function was called
@@ -40,19 +39,15 @@ int main(it argc, char *argv[]) {
 
     mprof::set_result_handler([](const mprof::result_t & result) {
 
-        for (auto acc : result.accumulators) {
+        for (auto record : result.records) {
 
             printf(
                 "Function %s:\n"
                 "    Calls:                %ld\n"
-                "    Cycles:               %ld\n"
-                "    %% of profiled cycles: %d\n"
-                "    %% of total cycles:    %d\n\n",
-                acc->fnname,
-                acc->calls,
-                acc->cycles,
-                static_cast<int> (100.0f * acc->cycles / result.profiled_cycles),
-                static_cast<int> (100.0f * acc->cycles / result.total_cycles)
+                "    Cycles:               %ld\n\n"
+                record.fnname,
+                record.calls,
+                record.cycles
             );
         }
     });
@@ -67,12 +62,8 @@ int main(it argc, char *argv[]) {
 Function void do_number_stuff(int, double):
     Calls:                5
     Cycles:               30570
-    % of profiled cycles: 62
-    % of total cycles:    48
 
 Function int do_other_stuff(const char*):
     Calls:                2
     Cycles:               17996
-    % of profiled cycles: 37
-    % of total cycles:    28
 ```

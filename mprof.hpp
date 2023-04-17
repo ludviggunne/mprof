@@ -54,8 +54,7 @@ namespace mprof {
 
         result_t();
 
-        uint64_t total_cycles;
-        uint64_t profiled_cycles;
+        uint64_t              cycles;
         std::vector<record_t> records;
     };
 
@@ -95,15 +94,19 @@ namespace mprof {
     static void (*result_handler)(const result_t &) = nullptr;
     static struct _result_wrapper {
 
+        _result_wrapper() : begin(__rdtsc()) {}
+
         ~_result_wrapper()
-        {
-           result_handler(result);
+        {   
+            result.cycles = __rdtsc() - begin;
+            result_handler(result);
         }
 
+        uint64_t begin;
         result_t result;
     } result_wrapper;
 
-    result_t::result_t() : total_cycles(0), profiled_cycles(0) {}
+    result_t::result_t() : cycles(0) {}
 
     void set_result_handler(void (*handler)(const result_t &)) 
     {

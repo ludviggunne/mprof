@@ -28,11 +28,18 @@
 #include <cstdint>
 #include <vector>
 
-#if defined(__GNUC__) && ((__GNUC__ >= 4 && __GNUC_MINOR__ >= 5) || (__GNUC__ >= 5))
-#include <x86intrin.h>
-#define _MPROF_FUNCTION __PRETTY_FUNCTION__
+#if defined(__GNUC__)
+#   if (__GNUC__ >= 4 && __GNUC_MINOR__ >= 5) || (__GNUC__ >= 5)
+#       include <x86intrin.h>
+#       define _MPROF_FUNCTION __PRETTY_FUNCTION__
+#   else
+#       error "Only GCC v4.5 or higher supported"
+#   endif
+#elif defined(_MSC_VER)
+#   include <intrin.h>
+#   defined _MPROF_FUNCTION __FUNCSIG__ 
 #else
-#error "Only GCC (v4.5 or higher) supported"
+#   error "Compiler not supported"
 #endif
 
 #define MPROF_PROFILE_HERE()\

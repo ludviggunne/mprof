@@ -27,8 +27,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <functional>
-#include <stdio.h>
 
 #if defined(__GNUC__) && ((__GNUC__ >= 4 && __GNUC_MINOR__ >= 5) || (__GNUC__ >= 5))
 #include <x86intrin.h>
@@ -38,86 +36,54 @@
 #endif
 
 #define MPROF_PROFILE_HERE()\
-    static auto __accumulator = new mprof::accumulator_t(_MPROF_FUNCTION);\
-    mprof::scope_t __local_scope(__accumulator);
+    static mprof::record_t &__record = mprof::_internal::new_record(_MPROF_FUNCTION);\
+    mprof::_internal::scope_t __scope(__record);
 
 namespace mprof {
 
-    struct accumulator_t {
+    struct record_t {
 
-        accumulator_t(const char * fnname);
+        record_t(const char *fnname) : fnname(fnname), cycles(0), calls(0) {}
 
-        uint64_t     cycles;
-        uint64_t     calls;
-        const char * fnname;
+        const char *fnname;
+        uint64_t    cycles;
+        uint64_t    calls;
     };
 
     struct result_t {
 
-        uint64_t                           total_cycles;
-        uint64_t                           profiled_cycles;
-        std::vector<const accumulator_t *> accumulators;
+        result_t();
+
+        uint64_t total_cycles;
+        uint64_t profiled_cycles;
+        std::vector<record_t> records;
     };
 
-    void set_result_handler(std::function<void(const result_t &)> handler);
+    void set_result_handler(void (*handler)(const result_t &));
 
-    class collector_t {
-    public:
-        collector_t()
-        {
-            result.total_cycles = __rdtsc();
-        }
+    namespace _internal {
 
-        ~collector_t()
-        {
-            result.total_cycles = __rdtsc() - result.total_cycles ;
-            result_handler(result);
-            for (auto accumulator : result.accumulators) {
-                delete accumulator;
+        record_t &new_record(const char *fnname);
+
+        class scope_t {
+        public:
+            scope_t(record_t &record)
+                : _record(record),
+                _begin(__rdtsc())
+            {
             }
-        }
 
-    private:
+            ~scope_t()
+            {
+                _record.cycles += __rdtsc() - _begin;
+                _record.calls++;
+            }
 
-        void register_accumulator(accumulator_t * accumulator)
-        {
-            result.accumulators.push_back(accumulator);
-        }
-
-        friend class scope_t;
-        friend class accumulator_t;
-        friend void  set_result_handler(std::function<void(const result_t &)>);
-
-        result_t result;
-        std::function<void(const result_t &)> result_handler;
-    };
-
-    extern collector_t collector;
-    
-    class scope_t {
-
-    public:
-        scope_t(accumulator_t * accumulator)
-            : _accumulator(accumulator)
-        {
-            _begin = __rdtsc();
-        }
-
-        ~scope_t()
-        {
-            auto cycles = __rdtsc();
-            cycles -= _begin;
-
-            _accumulator->cycles += cycles;
-            _accumulator->calls++;
-
-            collector.result.profiled_cycles += cycles;
-        }
-
-    private:
-        uint64_t        _begin; 
-        accumulator_t * _accumulator;
-    };
+        private:
+            record_t      &_record;
+            const uint64_t _begin;
+        };
+    }
 }
 
 #endif /* MPROF_HEADER */
@@ -126,19 +92,31 @@ namespace mprof {
 
 namespace mprof {
 
-    accumulator_t::accumulator_t(const char * fnname)
-        : fnname (fnname), 
-          cycles (0), 
-          calls  (0) 
+    static void (*result_handler)(const result_t &) = nullptr;
+    static struct _result_wrapper {
+
+        ~_result_wrapper()
+        {
+           result_handler(result);
+        }
+
+        result_t result;
+    } result_wrapper;
+
+    result_t::result_t() : total_cycles(0), profiled_cycles(0) {}
+
+    void set_result_handler(void (*handler)(const result_t &)) 
     {
-        collector.register_accumulator(this);
+        result_handler = handler;
     }
 
-    void set_result_handler(std::function<void(const result_t &)> handler) {
-        collector.result_handler = handler;
-    }
+    namespace _internal {
 
-    collector_t collector;
+        record_t &new_record(const char *fnname) {
+
+            return result_wrapper.result.records.emplace_back(fnname);
+        }
+    }
 }
 
 #endif /* MPROF_IMPLEMENTATION */

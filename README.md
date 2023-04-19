@@ -3,7 +3,7 @@ Single header C++ library for collecting and emitting profiling data.
 
 ## Usage
 
-Include `mprof.hpp` and add `MPROF_PROFILE_HERE();` to the top of every function body you want to profile.
+1. Include `mprof.hpp` and add `MPROF_PROFILE_HERE();` to the top of every function body you want to profile.
 ```c++
 #include "mprof.h"
 
@@ -17,19 +17,21 @@ void do_something() {
 
 }
 ```
-Define `MPROF_IMPLEMENTATION` before including header in exactly one source file.
+2. Define `MPROF_IMPLEMENTATION` before including header in exactly one source file.
 ```c++
 #define MPROF_IMPLEMENTATION
 #include "mprof.hpp"
 
 // . . .
 ```
-Set how mprof should handle the profiling result on program exit, by using `mprof::set_result_handler`. This function is passed a const reference to a `result_t` struct, containing
-- `cycles`: the total number of CPU cycles recorded by mprof during execution.
-- `records`: a `std::vector` of `record_t` structs, each associated with a profiled function. Each `record_t` contains
-    - `fnname`: the name of the function as a C-string.
-    - `cycles`: number of CPU cycles spent inside function.
-    - `calls`: number of times function was called
+3. Define `MPROF_ENABLE` globally in the project, e.g. pass `-DMPROF_ENABLE` flag to g++
+
+4. Set how mprof should handle the profiling result on program exit, by using `mprof::set_result_handler`. The callback passed to this function recieves a const reference to a `result_t` struct, containing
+    - `cycles`: the total number of CPU cycles recorded by mprof during execution.
+    - `records`: an `std::vector` of `record_t` structs, each associated with a profiled function. Each `record_t` contains
+        - `fnname`: the name of the function as a C-string.
+        - `cycles`: number of CPU cycles spent inside function.
+        - `calls`: number of times function was called.
 ### Example:
 ```c++
 #include <stdio.h>

@@ -42,9 +42,13 @@
 #   error "Compiler not supported"
 #endif
 
-#define MPROF_PROFILE_HERE()\
-    static mprof::record_t &__record = mprof::_internal::new_record(_MPROF_FUNCTION);\
-    mprof::_internal::scope_t __scope(__record);
+#if defined(MPROF_ENABLE)
+#   define MPROF_PROFILE_HERE()\
+        static mprof::record_t &__record = mprof::_internal::new_record(_MPROF_FUNCTION);\
+        mprof::_internal::scope_t __scope(__record);
+#else
+#   define MPROF_PROFILE_HERE()
+#endif
 
 namespace mprof {
 
@@ -101,15 +105,17 @@ namespace mprof {
     static void (*result_handler)(const result_t &) = nullptr;
     static struct _result_wrapper {
 
+#if defined(MPROF_ENABLE) 
         _result_wrapper() : begin(__rdtsc()) {}
 
         ~_result_wrapper()
-        {   
+        {
             result.cycles = __rdtsc() - begin;
             result_handler(result);
         }
 
         uint64_t begin;
+#endif
         result_t result;
     } result_wrapper;
 
@@ -117,7 +123,9 @@ namespace mprof {
 
     void set_result_handler(void (*handler)(const result_t &)) 
     {
+#if defined(MPROF_ENABLE)
         result_handler = handler;
+#endif
     }
 
     namespace _internal {
